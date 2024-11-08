@@ -25,12 +25,13 @@ function bar_multSize_sameSeq_PTB(subj,run,seq)
 % to avoid super-aggressive timing tests on windows:
 %Screen('Preference','SyncTestSettings' [, maxStddev=0.001 secs][, minSamples=50][, maxDeviation=0.1][, maxDuration=5 secs]);
 Screen('Preference','SyncTestSettings' ,0.01); %maxStddev in sec
-
+KbName('UnifyKeyNames')
 
 p.subj = subj;
 p.run = run;
 
-p.TR = 1.3; % 1300 ms, our typical 4x multiband 2 mm iso retinotopy seq
+p.TR = 1.0; % 1300 ms, our typical 4x multiband 2 mm iso retinotopy seq
+
 
 p.filename = sprintf('./data/%s_r%02.f_RF_bar_multSize_%s.mat',p.subj,p.run,datestr(now,30));
 if ~exist('./data','dir')
@@ -42,9 +43,9 @@ ctime = cputime*1000;
 rng(ctime);
 
 % if demo, do fast stimuli and fast wait at beginning
-p.scanner = 1;
-
-p.do_et = 1;
+p.scanner = 0;
+p.fullscreen = 0;
+p.do_et = 0;
 
 if p.do_et == 1
     p.eyedatafile = sprintf('%s_RF%02.f',p.subj(1:min(length(p.subj),3)),p.run);
@@ -54,7 +55,7 @@ end
 p.bar_width_multiplier = 2.5; % multiply width integers by this
 
 if nargin < 3
-    % made these bigger for scanner - if we're doign 12 steps, to fully
+    % made these bigger for scanner - if we're doing 12 steps, to fully
     % sample space at small bar, need ~2.5 deg width; I think mackey et
     % al did sub-sampling of space on smallest bar, though
 
@@ -91,6 +92,13 @@ else
     p.viewing_distance = 63 + 9.5; % cm
 end
 
+if p.fullscreen == 0
+    p.resolution = [1024, 768];
+    upper_left = [200,200];
+    p.screen_rect = [upper_left, upper_left + p.resolution];
+else
+    p.screen_rect = [];
+end
 
 % ----- bar stimulus info -----
 
@@ -194,11 +202,11 @@ p.sweep_end   = nan(size(p.seq,1),1);
 
 
 % ----- button info ------
-if ismac == 1
-    p.esc_key = KbName('escape'); % press this key to abort
-else
-    p.esc_key = KbName('esc');
-end
+%if ismac == 1
+p.esc_key = KbName('escape'); % press this key to abort
+%else
+%    p.esc_key = KbName('esc');
+%end
 p.start_key = [KbName('5%') KbName('5')];  % should be lower-case t at prisma? (or %5, which is top-row 5, or 5, which is numpad 5)
 p.resp_keys = [KbName('1!'),KbName('2@')]; % 1 = left/up, 2 = right/down
 
@@ -212,9 +220,11 @@ p.resp_keys = [KbName('1!'),KbName('2@')]; % 1 = left/up, 2 = right/down
 Screen('Preference', 'SkipSyncTests', 0);
 if p.scanner == 1
     %[w,rect] = Screen('OpenWindow', 2,p.bg_color);
-    [w,rect] = Screen('OpenWindow', max(Screen('Screens')),p.bg_color);
+    %[w,rect] = Screen('OpenWindow',windowPtrOrScreenNumber [,color] [,rect][,pixelSize][,numberOfBuffers][,stereomode][,multisample][,imagingmode][,specialFlags][,clientRect][,fbOverrideRect][,vrrParams=[]]);
+
+    [w,rect] = Screen('OpenWindow', max(Screen('Screens')),p.bg_color, p.screen_rect);
 else
-    [w,rect] = Screen('OpenWindow', max(Screen('Screens')),p.bg_color);
+    [w,rect] = Screen('OpenWindow', max(Screen('Screens')),p.bg_color, p.screen_rect);
 end
 
 % refresh rate
